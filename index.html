@@ -174,15 +174,15 @@ h3{font-size:17px;margin-bottom:7px}
  stroke:rgba(114,220,255,.12);stroke-width:2.2;fill:none;stroke-linecap:round;stroke-dasharray:6 8;opacity:.55
 }
 .routePath{
- stroke:rgba(114,220,255,.16);stroke-width:4.5;fill:none;stroke-linecap:round;opacity:0;
- transition:opacity .22s ease;stroke-dasharray:10 8;animation:routeFlow 1.4s linear infinite
+ stroke:rgba(114,220,255,.16);stroke-width:5.8;fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:0;
+ transition:opacity .22s ease
 }
 .routePath.active{
  opacity:1;stroke:url(#routeGradient);
- filter:drop-shadow(0 0 10px rgba(114,220,255,.18)) drop-shadow(0 0 18px rgba(255,201,109,.08))
+ filter:drop-shadow(0 0 12px rgba(114,220,255,.30)) drop-shadow(0 0 22px rgba(255,201,109,.12))
 }
 .routePacket{
- fill:#bdf1ff;opacity:0;filter:drop-shadow(0 0 8px rgba(114,220,255,.65))
+ fill:#dff8ff;opacity:0;filter:drop-shadow(0 0 8px rgba(114,220,255,.70))
 }
 .routePacket.active{opacity:1}
 .node{
@@ -218,7 +218,6 @@ h3{font-size:17px;margin-bottom:7px}
  background:rgba(6,25,35,.80);border:1px solid rgba(114,220,255,.18);padding:7px 12px;border-radius:999px;
  z-index:3
 }
-@keyframes routeFlow{to{stroke-dashoffset:-18}}
 @keyframes beaconPulse{
  0%{transform:scale(1);opacity:.7}
  70%{transform:scale(1.22);opacity:0}
@@ -432,10 +431,12 @@ h3{font-size:17px;margin-bottom:7px}
         <line class="routeGhost" id="ghostD" x1="0" y1="0" x2="0" y2="0"></line>
         <line class="routeGhost" id="ghostE" x1="0" y1="0" x2="0" y2="0"></line>
         <line class="routeGhost" id="ghostF" x1="0" y1="0" x2="0" y2="0"></line>
+        <line class="routeGhost" id="ghostG" x1="0" y1="0" x2="0" y2="0"></line>
+        <line class="routeGhost" id="ghostH" x1="0" y1="0" x2="0" y2="0"></line>
+        <line class="routeGhost" id="ghostI" x1="0" y1="0" x2="0" y2="0"></line>
 
         <!-- rota ativa -->
-        <line id="path1" class="routePath" x1="0" y1="0" x2="0" y2="0"></line>
-        <line id="path2" class="routePath" x1="0" y1="0" x2="0" y2="0"></line>
+        <path id="activeRoute" class="routePath" d=""></path>
 
         <!-- pacotes de dados -->
         <circle id="packet1" class="routePacket" r="4"></circle>
@@ -449,7 +450,7 @@ h3{font-size:17px;margin-bottom:7px}
       <div class="node" id="nodeServer" style="left:39%;top:50%">SERVIDORES</div>
       <div class="node" id="nodeService" style="left:39%;top:74%">SERVIÇO</div>
 
-      <div class="node target" id="nodeVault" style="left:88%;top:50%">COFRE Ω</div>
+      <div class="node target" id="nodeVault" style="left:72%;top:50%">COFRE Ω</div>
       <div class="mapLabel">A rota escolhida será destacada com transmissão ativa</div>
     </div>
 
@@ -783,29 +784,28 @@ function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t
 
 
 
-let packetTimer = null;
+
+
+let packetFrame = null;
 
 function drawRoutePath(){
- const seg1=document.getElementById("path1");
- const seg2=document.getElementById("path2");
+ const routeEl=document.getElementById("activeRoute");
  const packet1=document.getElementById("packet1");
  const packet2=document.getElementById("packet2");
- if(!(seg1&&seg2&&packet1&&packet2)) return;
+ if(!(routeEl&&packet1&&packet2)) return;
 
  const nodeIds=["nodeRoof","nodeGarage","nodeArchive","nodeServer","nodeService","nodeVault"];
  nodeIds.forEach(id=>document.getElementById(id)?.classList.remove("activeNode"));
 
- const clearPaths=()=>{
-   [seg1,seg2].forEach(seg=>{
-     seg.classList.remove("active");
-     seg.setAttribute("x1",0); seg.setAttribute("y1",0);
-     seg.setAttribute("x2",0); seg.setAttribute("y2",0);
-   });
-   [packet1,packet2].forEach(p=>p.classList.remove("active"));
-   stopPackets();
- };
  drawGhostNetwork();
- if(!(state.entry&&state.route)){ clearPaths(); return; }
+
+ const clearRoute=()=>{
+   routeEl.classList.remove("active");
+   routeEl.setAttribute("d","");
+   [packet1,packet2].forEach(p=>p.classList.remove("active"));
+   stopPacketMotion();
+ };
+ if(!(state.entry&&state.route)){ clearRoute(); return; }
 
  const routeMap=document.getElementById("routeMap");
  const rect=routeMap.getBoundingClientRect();
@@ -823,16 +823,17 @@ function drawRoutePath(){
  const b = centers[state.route];
  const c = centers.vault;
 
- setLine(seg1, a, b);
- setLine(seg2, b, c);
- [seg1,seg2].forEach(seg=>seg.classList.add("active"));
+ // Single route path: entry -> corridor -> vault
+ const d = `M ${a.x} ${a.y} L ${b.x} ${b.y} L ${c.x} ${c.y}`;
+ routeEl.setAttribute("d", d);
+ routeEl.classList.add("active");
  [packet1,packet2].forEach(p=>p.classList.add("active"));
 
  const entryNode = state.entry === "roof" ? "nodeRoof" : "nodeGarage";
  const routeNode = state.route === "archive" ? "nodeArchive" : state.route === "server" ? "nodeServer" : "nodeService";
  [entryNode, routeNode, "nodeVault"].forEach(id=>document.getElementById(id)?.classList.add("activeNode"));
 
- startPackets(a,b,c);
+ startPacketMotion(routeEl);
 }
 
 function drawGhostNetwork(){
@@ -856,6 +857,9 @@ function drawGhostNetwork(){
    ["ghostD", centers.garage, centers.archive],
    ["ghostE", centers.garage, centers.server],
    ["ghostF", centers.garage, centers.service],
+   ["ghostG", centers.archive, centers.vault],
+   ["ghostH", centers.server, centers.vault],
+   ["ghostI", centers.service, centers.vault],
  ];
 
  ghosts.forEach(([id,p1,p2])=>{
@@ -876,34 +880,31 @@ function setLine(el, p1, p2){
  el.setAttribute("y2", p2.y);
 }
 
-function startPackets(a,b,c){
- stopPackets();
+function startPacketMotion(pathEl){
+ stopPacketMotion();
  const packet1=document.getElementById("packet1");
  const packet2=document.getElementById("packet2");
- let t=0;
- packetTimer = setInterval(()=>{
-   t=(t+0.025)%1;
-   const p = interpolateSegment(a,b,c,t);
-   const q = interpolateSegment(a,b,c,(t+0.45)%1);
+ const total = pathEl.getTotalLength();
+ let t = 0;
+
+ function tick(){
+   t = (t + 2.2) % total;
+   const p = pathEl.getPointAtLength(t);
+   const q = pathEl.getPointAtLength((t + total*0.42) % total);
    packet1.setAttribute("cx", p.x); packet1.setAttribute("cy", p.y);
    packet2.setAttribute("cx", q.x); packet2.setAttribute("cy", q.y);
- }, 26);
-}
-
-function stopPackets(){
- if(packetTimer){ clearInterval(packetTimer); packetTimer = null; }
-}
-
-function interpolateSegment(a,b,c,t){
- if(t < 0.5){
-   const u = t/0.5;
-   return {x:a.x + (b.x-a.x)*u, y:a.y + (b.y-a.y)*u};
+   packetFrame = requestAnimationFrame(tick);
  }
- const u = (t-0.5)/0.5;
- return {x:b.x + (c.x-b.x)*u, y:b.y + (c.y-b.y)*u};
+ tick();
+}
+
+function stopPacketMotion(){
+ if(packetFrame){ cancelAnimationFrame(packetFrame); packetFrame = null; }
 }
 
 window.addEventListener("resize", drawRoutePath);
+
+
 renderChoices();
 setTimeout(drawRoutePath, 120);
 </script>
