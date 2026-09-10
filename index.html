@@ -134,15 +134,100 @@ h3{font-size:17px;margin-bottom:7px}
 .securityTrack span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--gold),var(--red));transition:width .45s ease}
 .securityValue{font-size:10px;color:var(--muted);min-width:70px;text-align:right}
 
-.routeMap{height:315px;border:1px solid var(--line);border-radius:17px;background:
+.routeMap{
+ height:340px;border:1px solid rgba(114,220,255,.18);border-radius:20px;position:relative;overflow:hidden;margin-top:14px;
+ background:
+ radial-gradient(circle at 18% 28%, rgba(114,220,255,.08), transparent 22%),
+ radial-gradient(circle at 86% 52%, rgba(255,201,109,.07), transparent 22%),
  linear-gradient(90deg,rgba(114,220,255,.04) 1px,transparent 1px),
- linear-gradient(rgba(114,220,255,.04) 1px,transparent 1px),#061923;background-size:26px 26px;position:relative;overflow:hidden;margin-top:14px}
-.routeLine{position:absolute;height:3px;border-radius:99px;background:rgba(114,220,255,.22);transform-origin:left center}
-.routeLine.active{background:linear-gradient(90deg,var(--cyan),var(--gold));box-shadow:0 0 12px rgba(114,220,255,.25)}
-.node{position:absolute;width:54px;height:54px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(114,220,255,.3);background:#0a2232;color:#c8e9f8;font-size:8px;font-weight:900;letter-spacing:.07em;text-align:center;padding:4px}
-.node.target{border-color:rgba(255,201,109,.45);color:var(--gold)}
-.mapAction{position:absolute;border:1px solid var(--line);background:rgba(7,28,41,.92);border-radius:11px;padding:8px 9px;font-size:9px;font-weight:900}
-.mapAction:hover{background:rgba(114,220,255,.09)}
+ linear-gradient(rgba(114,220,255,.04) 1px,transparent 1px),
+ linear-gradient(180deg,#071b27,#04131d 74%);
+ background-size:auto,auto,26px 26px,26px 26px,auto;
+ box-shadow:inset 0 0 70px rgba(0,0,0,.22), 0 16px 36px rgba(0,0,0,.16)
+}
+.routeMap::before{
+ content:"";position:absolute;inset:0;
+ background:
+ linear-gradient(180deg,rgba(255,255,255,.02),transparent 18%,transparent 82%,rgba(255,255,255,.015)),
+ linear-gradient(90deg,transparent,rgba(114,220,255,.04),transparent);
+ pointer-events:none
+}
+.routeMap::after{
+ content:"";position:absolute;inset:-25% auto -25% -12%;width:34%;
+ background:linear-gradient(90deg,transparent,rgba(114,220,255,.10),transparent);
+ transform:skewX(-18deg);
+ animation:mapSweep 6.5s linear infinite;
+ opacity:.55;pointer-events:none
+}
+.routeHud{
+ position:absolute;left:14px;top:12px;right:14px;display:flex;justify-content:space-between;gap:14px;
+ z-index:3;pointer-events:none
+}
+.hudPill{
+ border:1px solid rgba(114,220,255,.2);background:rgba(6,25,35,.72);backdrop-filter:blur(8px);
+ color:#cfe8f4;padding:8px 10px;border-radius:999px;font-size:9px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;
+ box-shadow:0 8px 20px rgba(0,0,0,.14)
+}
+.hudPill b{color:var(--gold)}
+.routeSvg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.routeGhost{
+ stroke:rgba(114,220,255,.12);stroke-width:2.2;fill:none;stroke-linecap:round;stroke-dasharray:6 8;opacity:.55
+}
+.routePath{
+ stroke:rgba(114,220,255,.16);stroke-width:4.5;fill:none;stroke-linecap:round;opacity:0;
+ transition:opacity .22s ease;stroke-dasharray:10 8;animation:routeFlow 1.4s linear infinite
+}
+.routePath.active{
+ opacity:1;stroke:url(#routeGradient);
+ filter:drop-shadow(0 0 10px rgba(114,220,255,.18)) drop-shadow(0 0 18px rgba(255,201,109,.08))
+}
+.routePacket{
+ fill:#bdf1ff;opacity:0;filter:drop-shadow(0 0 8px rgba(114,220,255,.65))
+}
+.routePacket.active{opacity:1}
+.node{
+ position:absolute;width:70px;height:70px;border-radius:50%;
+ display:grid;place-items:center;transform:translate(-50%,-50%);
+ border:1px solid rgba(114,220,255,.32);
+ background:radial-gradient(circle at 35% 32%, rgba(114,220,255,.18), rgba(10,34,50,.98) 58%);
+ color:#d7edf8;font-size:9px;font-weight:900;letter-spacing:.07em;text-align:center;padding:6px;line-height:1.15;
+ box-shadow:0 14px 28px rgba(0,0,0,.18), inset 0 0 22px rgba(114,220,255,.06);
+ z-index:2
+}
+.node::before{
+ content:"";position:absolute;inset:8px;border-radius:50%;border:1px solid rgba(114,220,255,.18)
+}
+.node::after{
+ content:"";position:absolute;inset:-6px;border-radius:50%;border:1px solid rgba(114,220,255,.10);opacity:.8
+}
+.node.target{
+ border-color:rgba(255,201,109,.48);color:var(--gold);
+ background:radial-gradient(circle at 35% 32%, rgba(255,201,109,.20), rgba(34,26,10,.98) 58%);
+ box-shadow:0 14px 28px rgba(0,0,0,.18), inset 0 0 24px rgba(255,201,109,.08), 0 0 26px rgba(255,201,109,.08)
+}
+.node.target::after{animation:beaconPulse 1.8s infinite}
+.node.activeNode{
+ box-shadow:0 14px 28px rgba(0,0,0,.18), inset 0 0 22px rgba(114,220,255,.08), 0 0 24px rgba(114,220,255,.10)
+}
+.node.target.activeNode{
+ box-shadow:0 14px 28px rgba(0,0,0,.18), inset 0 0 24px rgba(255,201,109,.10), 0 0 30px rgba(255,201,109,.14)
+}
+.mapLabel{
+ position:absolute;left:50%;bottom:12px;transform:translateX(-50%);
+ font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;
+ background:rgba(6,25,35,.80);border:1px solid rgba(114,220,255,.18);padding:7px 12px;border-radius:999px;
+ z-index:3
+}
+@keyframes routeFlow{to{stroke-dashoffset:-18}}
+@keyframes beaconPulse{
+ 0%{transform:scale(1);opacity:.7}
+ 70%{transform:scale(1.22);opacity:0}
+ 100%{transform:scale(1);opacity:0}
+}
+@keyframes mapSweep{
+ 0%{transform:translateX(-10%) skewX(-18deg)}
+ 100%{transform:translateX(340%) skewX(-18deg)}
+}
 
 .codeGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:14px}
 .codeBtn{height:58px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.03);font:900 20px "SFMono-Regular",Consolas,monospace}
@@ -187,6 +272,7 @@ h3{font-size:17px;margin-bottom:7px}
  .scene{padding:24px 18px}.hero,.cutscene{grid-template-columns:1fr}.heroVisual{height:300px}.orb{width:240px;height:240px}.orbCore b{font-size:72px}
  .character{height:340px}.cutscene{align-items:center}.dialogText{font-size:16px;min-height:100px}
  .choiceGrid,.choiceGrid.two{grid-template-columns:1fr}.summaryGrid,.revealGrid,.answerArea{grid-template-columns:1fr}
+ .node{width:58px;height:58px;font-size:8px}.routeMap{height:320px}.routeHud{left:10px;right:10px;top:10px}.hudPill{font-size:8px;padding:7px 9px}
  .stage{min-height:840px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
@@ -326,16 +412,45 @@ h3{font-size:17px;margin-bottom:7px}
     <div class="feedback" id="routeFeedback">Monte uma rota. Algumas combinações são mais arriscadas que outras.</div>
 
     <div class="routeMap" id="routeMap">
-      <div class="routeLine" id="lineA" style="width:210px;left:13%;top:30%;transform:rotate(11deg)"></div>
-      <div class="routeLine" id="lineB" style="width:230px;left:13%;top:69%;transform:rotate(-10deg)"></div>
-      <div class="routeLine" id="lineC" style="width:280px;left:40%;top:43%;transform:rotate(3deg)"></div>
-      <div class="routeLine" id="lineD" style="width:250px;left:40%;top:59%;transform:rotate(-4deg)"></div>
-      <div class="node" style="left:7%;top:20%">COBERTURA</div>
-      <div class="node" style="left:7%;top:62%">GARAGEM</div>
-      <div class="node" style="left:37%;top:21%">ARQUIVOS</div>
-      <div class="node" style="left:37%;top:47%">SERVIDORES</div>
-      <div class="node" style="left:37%;top:72%">SERVIÇO</div>
-      <div class="node target" style="right:8%;top:43%">COFRE Ω</div>
+      <div class="routeHud">
+        <div class="hudPill">Mapa tático · <b>Edifício Nox</b></div>
+        <div class="hudPill">Sinal · <b>ao vivo</b></div>
+      </div>
+
+      <svg class="routeSvg" id="routeSvg" viewBox="0 0 1000 340" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="routeGradient" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" stop-color="#72dcff"/>
+            <stop offset="100%" stop-color="#ffc96d"/>
+          </linearGradient>
+        </defs>
+
+        <!-- malha fantasma -->
+        <line class="routeGhost" id="ghostA" x1="0" y1="0" x2="0" y2="0"></line>
+        <line class="routeGhost" id="ghostB" x1="0" y1="0" x2="0" y2="0"></line>
+        <line class="routeGhost" id="ghostC" x1="0" y1="0" x2="0" y2="0"></line>
+        <line class="routeGhost" id="ghostD" x1="0" y1="0" x2="0" y2="0"></line>
+        <line class="routeGhost" id="ghostE" x1="0" y1="0" x2="0" y2="0"></line>
+        <line class="routeGhost" id="ghostF" x1="0" y1="0" x2="0" y2="0"></line>
+
+        <!-- rota ativa -->
+        <line id="path1" class="routePath" x1="0" y1="0" x2="0" y2="0"></line>
+        <line id="path2" class="routePath" x1="0" y1="0" x2="0" y2="0"></line>
+
+        <!-- pacotes de dados -->
+        <circle id="packet1" class="routePacket" r="4"></circle>
+        <circle id="packet2" class="routePacket" r="4"></circle>
+      </svg>
+
+      <div class="node" id="nodeRoof" style="left:10%;top:27%">COBERTURA</div>
+      <div class="node" id="nodeGarage" style="left:10%;top:70%">GARAGEM</div>
+
+      <div class="node" id="nodeArchive" style="left:39%;top:26%">ARQUIVOS</div>
+      <div class="node" id="nodeServer" style="left:39%;top:50%">SERVIDORES</div>
+      <div class="node" id="nodeService" style="left:39%;top:74%">SERVIÇO</div>
+
+      <div class="node target" id="nodeVault" style="left:88%;top:50%">COFRE Ω</div>
+      <div class="mapLabel">A rota escolhida será destacada com transmissão ativa</div>
     </div>
 
     <div class="answerArea">
@@ -579,11 +694,7 @@ function evaluateRoute(){
  if(state.entry==="roof"&&state.route==="server"){safe=false;msg="Combinação arriscada: o corredor técnico cruza sensores térmicos antes da sala de servidores."}
  fb.className="feedback "+(safe?"good":"bad");
  fb.textContent=safe?"Rota montada com baixo risco. Agora resolva a contagem total.":msg+" Você pode tentar outra combinação.";
- document.querySelectorAll(".routeLine").forEach(l=>l.classList.remove("active"));
- if(state.entry==="roof") document.getElementById("lineA").classList.add("active");
- if(state.entry==="garage") document.getElementById("lineB").classList.add("active");
- if(state.route==="archive") document.getElementById("lineC").classList.add("active");
- else document.getElementById("lineD").classList.add("active");
+ drawRoutePath();
  if(!safe){state.alerts++;state.points=Math.max(0,state.points-10)}
  maybeEnableRouteNext();
 }
@@ -670,6 +781,130 @@ function ping(freq=440,d=.04){
 }
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),2600)}
 
+
+
+let packetTimer = null;
+
+function drawRoutePath(){
+ const seg1=document.getElementById("path1");
+ const seg2=document.getElementById("path2");
+ const packet1=document.getElementById("packet1");
+ const packet2=document.getElementById("packet2");
+ if(!(seg1&&seg2&&packet1&&packet2)) return;
+
+ const nodeIds=["nodeRoof","nodeGarage","nodeArchive","nodeServer","nodeService","nodeVault"];
+ nodeIds.forEach(id=>document.getElementById(id)?.classList.remove("activeNode"));
+
+ const clearPaths=()=>{
+   [seg1,seg2].forEach(seg=>{
+     seg.classList.remove("active");
+     seg.setAttribute("x1",0); seg.setAttribute("y1",0);
+     seg.setAttribute("x2",0); seg.setAttribute("y2",0);
+   });
+   [packet1,packet2].forEach(p=>p.classList.remove("active"));
+   stopPackets();
+ };
+ drawGhostNetwork();
+ if(!(state.entry&&state.route)){ clearPaths(); return; }
+
+ const routeMap=document.getElementById("routeMap");
+ const rect=routeMap.getBoundingClientRect();
+
+ const centers = {
+   roof: centerOf("nodeRoof", rect),
+   garage: centerOf("nodeGarage", rect),
+   archive: centerOf("nodeArchive", rect),
+   server: centerOf("nodeServer", rect),
+   service: centerOf("nodeService", rect),
+   vault: centerOf("nodeVault", rect)
+ };
+
+ const a = centers[state.entry];
+ const b = centers[state.route];
+ const c = centers.vault;
+
+ setLine(seg1, a, b);
+ setLine(seg2, b, c);
+ [seg1,seg2].forEach(seg=>seg.classList.add("active"));
+ [packet1,packet2].forEach(p=>p.classList.add("active"));
+
+ const entryNode = state.entry === "roof" ? "nodeRoof" : "nodeGarage";
+ const routeNode = state.route === "archive" ? "nodeArchive" : state.route === "server" ? "nodeServer" : "nodeService";
+ [entryNode, routeNode, "nodeVault"].forEach(id=>document.getElementById(id)?.classList.add("activeNode"));
+
+ startPackets(a,b,c);
+}
+
+function drawGhostNetwork(){
+ const routeMap=document.getElementById("routeMap");
+ if(!routeMap) return;
+ const rect=routeMap.getBoundingClientRect();
+
+ const centers = {
+   roof: centerOf("nodeRoof", rect),
+   garage: centerOf("nodeGarage", rect),
+   archive: centerOf("nodeArchive", rect),
+   server: centerOf("nodeServer", rect),
+   service: centerOf("nodeService", rect),
+   vault: centerOf("nodeVault", rect)
+ };
+
+ const ghosts = [
+   ["ghostA", centers.roof, centers.archive],
+   ["ghostB", centers.roof, centers.server],
+   ["ghostC", centers.roof, centers.service],
+   ["ghostD", centers.garage, centers.archive],
+   ["ghostE", centers.garage, centers.server],
+   ["ghostF", centers.garage, centers.service],
+ ];
+
+ ghosts.forEach(([id,p1,p2])=>{
+   const el=document.getElementById(id);
+   if(el) setLine(el,p1,p2);
+ });
+}
+
+function centerOf(id, mapRect){
+ const r=document.getElementById(id).getBoundingClientRect();
+ return {x:r.left - mapRect.left + r.width/2, y:r.top - mapRect.top + r.height/2};
+}
+
+function setLine(el, p1, p2){
+ el.setAttribute("x1", p1.x);
+ el.setAttribute("y1", p1.y);
+ el.setAttribute("x2", p2.x);
+ el.setAttribute("y2", p2.y);
+}
+
+function startPackets(a,b,c){
+ stopPackets();
+ const packet1=document.getElementById("packet1");
+ const packet2=document.getElementById("packet2");
+ let t=0;
+ packetTimer = setInterval(()=>{
+   t=(t+0.025)%1;
+   const p = interpolateSegment(a,b,c,t);
+   const q = interpolateSegment(a,b,c,(t+0.45)%1);
+   packet1.setAttribute("cx", p.x); packet1.setAttribute("cy", p.y);
+   packet2.setAttribute("cx", q.x); packet2.setAttribute("cy", q.y);
+ }, 26);
+}
+
+function stopPackets(){
+ if(packetTimer){ clearInterval(packetTimer); packetTimer = null; }
+}
+
+function interpolateSegment(a,b,c,t){
+ if(t < 0.5){
+   const u = t/0.5;
+   return {x:a.x + (b.x-a.x)*u, y:a.y + (b.y-a.y)*u};
+ }
+ const u = (t-0.5)/0.5;
+ return {x:b.x + (c.x-b.x)*u, y:b.y + (c.y-b.y)*u};
+}
+
+window.addEventListener("resize", drawRoutePath);
 renderChoices();
+setTimeout(drawRoutePath, 120);
 </script>
 </body></html>
